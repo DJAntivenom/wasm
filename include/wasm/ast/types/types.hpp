@@ -53,6 +53,8 @@ struct GlobalType;
 
 struct MemoryType;
 
+struct DefinedType;
+
 WASM_NAMESPACE_END
 
 #include "AddressType.hpp"

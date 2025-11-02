@@ -11,6 +11,11 @@ target_sources(${WASM_TARGET_NAME}
   "main.cpp"
   "wasm.cpp"
 
+  "ast/Module.cpp"
+
+  "ast/types/CompositeType.cpp"
+  "ast/types/RecursiveType.cpp"
+
   "decode/BinaryDecoder.cpp"
   "decode/CodeSectionDecoder.cpp"
   "decode/ExportSectionDecoder.cpp"

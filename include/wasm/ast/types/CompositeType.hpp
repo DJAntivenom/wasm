@@ -7,6 +7,7 @@
 
 #include <wasm/wasm.hpp>
 
+#include <sstream>
 #include <variant>
 #include <vector>
 
@@ -29,26 +30,88 @@ struct StorageType
 
 struct FieldType
 {
+    Error<void> validate(const Module &context) const
+    {
+        (void)context;
+        return Error<void>(std::unexpected("FieldType::validate(): not implemented"));
+    }
+
     bool is_mutable;
     StorageType fieldtype;
 };
 
 struct CompositeType
 {
+    Error<void> validate(const Module &context) const;
+
     struct Struct
     {
         std::vector<FieldType> fields;
+
+        inline Error<void> validate(const Module &context) const
+        {
+            for (std::size_t i = 0; i < fields.size(); ++i)
+            {
+                auto field_valid = fields[i].validate(context);
+                if (!field_valid)
+                {
+                    std::stringstream msg;
+                    msg << "CompositeType::Struct::validate(): Field " << i << " is invalid\n"
+                        << "  Reason: " << field_valid.error();
+                    return Error<void>(std::unexpected(msg.str()));
+                }
+            }
+
+            return Error<void>();
+        }
     };
 
     struct Array
     {
         FieldType elements;
+
+        inline Error<void> validate(const Module &context) const
+        {
+            auto field_valid = elements.validate(context);
+            if (!field_valid)
+            {
+                std::stringstream msg;
+                msg << "CompositeType::Array::validate(): element type is invalid\n"
+                    << "  Reason: " << field_valid.error();
+                return Error<void>(std::unexpected(msg.str()));
+            }
+
+            return Error<void>();
+        }
     };
 
     struct Func
     {
         ResultType parameters;
         ResultType results;
+
+        inline Error<void> validate(const Module &context) const
+        {
+            auto p = parameters.validate(context);
+            if (!p)
+            {
+                std::stringstream msg;
+                msg << "CompositeType::Function::validate(): parameter type is invalid\n"
+                    << "  Reason: " << p.error();
+                return Error<void>(std::unexpected(msg.str()));
+            }
+
+            auto r = parameters.validate(context);
+            if (!r)
+            {
+                std::stringstream msg;
+                msg << "CompositeType::Function::validate(): parameter type is invalid\n"
+                    << "  Reason: " << r.error();
+                return Error<void>(std::unexpected(msg.str()));
+            }
+
+            return Error<void>();
+        };
     };
 
     std::variant<Struct, Array, Func> comptype;

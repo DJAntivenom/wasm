@@ -21,6 +21,12 @@ struct ConstType
 struct ValType
 {
     std::variant<NumType, VecType, RefType> valtype;
+
+    inline Error<void> validate(const Module &context) const
+    {
+        (void)context;
+        return Error<void>(std::unexpected("ValType::validate(): not implemented\n"));
+    };
 };
 
 WASM_NAMESPACE_END

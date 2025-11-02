@@ -47,7 +47,6 @@ namespace options
 WASM_NAMESPACE_END
 
 #include "ast/instructions/instructions.hpp"
-
 #include "ast/types/types.hpp"
 
 #include "decode/decode.hpp"
