@@ -117,5 +117,16 @@ int main(int argc, const char *argv[])
         module = std::move(decode_error.value());
     }
 
+    if (options::is_verbose)
+        std::cout << "main: Decoded module, starting validation\n";
+
+    auto validation_success = module.validate();
+    if (!validation_success)
+    {
+        std::cerr << "Validation of module failed\n"
+                  << "  Reason: " << validation_success.error();
+        return 1;
+    }
+
     return 0;
 }

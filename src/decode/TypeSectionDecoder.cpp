@@ -219,7 +219,9 @@ static Error<SubType> decodeSingleSubType(TypeSectionDecoder::InputStream &strea
 
         return Error<SubType>(SubType{
             .is_final = (leading_byte == 0x4F),
-            .typeuse = std::move(x.value()),
+            .is_rolled_up = false,
+            .super_types = std::move(x.value()),
+            .rolled_super_types{},
             .comptype = ct.value(),
         });
     }
@@ -240,16 +242,18 @@ static Error<SubType> decodeSingleSubType(TypeSectionDecoder::InputStream &strea
 
         return Error<SubType>(SubType{
             .is_final = true,
-            .typeuse{},
+            .is_rolled_up = false,
+            .super_types{},
+            .rolled_super_types{},
             .comptype = ct.value(),
         });
     }
     }
 }
 
-static Error<TypeDefinition> decodeSingleType(TypeSectionDecoder::InputStream &stream)
+static Error<RecType> decodeSingleType(TypeSectionDecoder::InputStream &stream)
 {
-    using ErrType = Error<TypeDefinition>;
+    using ErrType = Error<RecType>;
 
     if (options::is_verbose)
         std::cout << "Decoding a single type in the type section\n";
@@ -284,7 +288,7 @@ static Error<TypeDefinition> decodeSingleType(TypeSectionDecoder::InputStream &s
         }
 
         rec.subtypes = std::move(subtypes.value());
-        return ErrType(rec);
+        return ErrType(std::move(rec));
     }
     default:
     {
@@ -300,7 +304,7 @@ static Error<TypeDefinition> decodeSingleType(TypeSectionDecoder::InputStream &s
         }
 
         rec.subtypes.push_back(std::move(subtype.value()));
-        return ErrType(rec);
+        return ErrType(std::move(rec));
     }
     }
 };
