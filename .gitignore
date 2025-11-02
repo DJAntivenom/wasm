@@ -44,3 +44,7 @@
 build_debug
 build_release
 
+# ide files
+.vs
+.vscode
+

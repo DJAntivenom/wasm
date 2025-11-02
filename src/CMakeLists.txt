@@ -9,4 +9,14 @@ target_include_directories(${WASM_TARGET_NAME}
 target_sources(${WASM_TARGET_NAME}
   PRIVATE
   "main.cpp"
+  "wasm.cpp"
+
+  "decode/BinaryDecoder.cpp"
+  "decode/CodeSectionDecoder.cpp"
+  "decode/ExportSectionDecoder.cpp"
+  "decode/FunctionSectionDecoder.cpp"
+  "decode/GlobalSectionDecoder.cpp"
+  "decode/MemorySectionDecoder.cpp"
+  "decode/SectionDecoder.cpp"
+  "decode/TypeSectionDecoder.cpp"
 )
