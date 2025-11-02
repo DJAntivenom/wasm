@@ -20,7 +20,7 @@ if(WASM_COMPILE_TESTS)
 endif()
 
 # set compile features
-target_compile_features(${WASM_TARGET_NAME} PUBLIC cxx_std_17)
+target_compile_features(${WASM_TARGET_NAME} PUBLIC cxx_std_23)
 set_target_properties(${WASM_TARGET_NAME} PROPERTIES C_EXTENSIONS OFF CXX_EXTENSIONS OFF)
 enable_supported_compiler_flag(${WASM_TARGET_NAME} FLAGS "-Wall" "-Wextra")
 
@@ -28,10 +28,6 @@ enable_supported_compiler_flag(${WASM_TARGET_NAME} FLAGS "-Wall" "-Wextra")
 if(CMAKE_GENERATOR STREQUAL "Ninja")
   enable_supported_compiler_flag(${WASM_TARGET_NAME}
                                  PUBLIC
-                                 FLAGS "-fcolor-diagnostics" "-fdiagnostics-color=always"
-  )
-  enable_supported_compiler_flag(${WASM_TARGET_NAME}
-                                 PUBLIC CHECK_C_FLAGS
                                  FLAGS "-fcolor-diagnostics" "-fdiagnostics-color=always"
   )
 endif()
