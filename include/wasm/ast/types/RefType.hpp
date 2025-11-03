@@ -3,6 +3,9 @@
 
 #include <wasm/wasm.hpp>
 
+#include <ostream>
+#include <string>
+
 #include "HeapType.hpp"
 
 WASM_NAMESPACE_BEGIN
@@ -24,9 +27,9 @@ struct RefType
 
     friend std::ostream &operator<<(std::ostream &os, const RefType &obj)
     {
-        os << "Ref";
+        os << std::string("Ref");
         if (obj.is_nullable)
-            os << " null";
+            os << std::string(" null");
         return os;
     }
 };

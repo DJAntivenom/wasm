@@ -10,6 +10,7 @@
 #include <cstddef>
 #include <expected>
 #include <memory>
+#include <variant>
 #include <vector>
 
 #define WASM_NAMESPACE_BEGIN \
