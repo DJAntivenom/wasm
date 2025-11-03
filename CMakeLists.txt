@@ -7,7 +7,9 @@ include("cmake/AddCompileOption.cmake")
 
 # add executable. This is the core of the project
 set(WASM_TARGET_NAME "${PROJECT_NAME}")
+add_library(wasm_library)
 add_executable(${WASM_TARGET_NAME})
+target_link_libraries(${WASM_TARGET_NAME} PUBLIC wasm_library)
 
 # setup project
 add_subdirectory("src")
@@ -20,13 +22,13 @@ if(WASM_COMPILE_TESTS)
 endif()
 
 # set compile features
-target_compile_features(${WASM_TARGET_NAME} PUBLIC cxx_std_23)
-set_target_properties(${WASM_TARGET_NAME} PROPERTIES C_EXTENSIONS OFF CXX_EXTENSIONS OFF)
-enable_supported_compiler_flag(${WASM_TARGET_NAME} FLAGS "-Wall" "-Wextra")
+target_compile_features(wasm_library PUBLIC cxx_std_23)
+set_target_properties(wasm_library PROPERTIES C_EXTENSIONS OFF CXX_EXTENSIONS OFF)
+enable_supported_compiler_flag(wasm_library FLAGS "-Wall" "-Wextra")
 
 # Force colored output for the ninja generator
 if(CMAKE_GENERATOR STREQUAL "Ninja")
-  enable_supported_compiler_flag(${WASM_TARGET_NAME}
+  enable_supported_compiler_flag(wasm_library
                                  PUBLIC
                                  FLAGS "-fcolor-diagnostics" "-fdiagnostics-color=always"
   )
