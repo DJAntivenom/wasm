@@ -25,11 +25,21 @@ struct I16
 
 struct StorageType
 {
+    StorageType(const ValType &v) : storagetype(v) {};
+    StorageType(ValType &&v) : storagetype(std::move(v)) {};
+    StorageType(const PackType &v) : storagetype(v) {};
+    StorageType(PackType &&v) : storagetype(std::move(v)) {};
+
     std::variant<ValType, PackType> storagetype;
 };
 
 struct FieldType
 {
+    FieldType(bool mut, const ValType &fieldtype) : is_mutable(mut), fieldtype(fieldtype) {};
+    FieldType(bool mut, const PackType &fieldtype) : is_mutable(mut), fieldtype(fieldtype) {};
+    FieldType(bool mut, ValType &&fieldtype) : is_mutable(mut), fieldtype(std::move(fieldtype)) {};
+    FieldType(bool mut, PackType &&fieldtype) : is_mutable(mut), fieldtype(std::move(fieldtype)) {};
+
     Error<void> validate(const Module &context) const
     {
         (void)context;

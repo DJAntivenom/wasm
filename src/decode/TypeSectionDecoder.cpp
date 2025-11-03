@@ -20,15 +20,15 @@ static Error<FieldType> decodeFieldType(TypeSectionDecoder::InputStream &stream)
         leading_byte = success.value();
     }
 
-    FieldType ft;
+    FieldType ft(false, PackType(I16()));
 
     switch (leading_byte)
     {
     case 0x77:
-        ft.fieldtype = StorageType{.storagetype{PackType{I16()}}};
+        ft.fieldtype = StorageType(PackType{I16()});
         break;
     case 0x78:
-        ft.fieldtype = StorageType{.storagetype{PackType{I8()}}};
+        ft.fieldtype = StorageType(PackType{I8()});
         break;
     default:
     {
@@ -41,7 +41,7 @@ static Error<FieldType> decodeFieldType(TypeSectionDecoder::InputStream &stream)
             return Error<FieldType>(std::unexpected(msg.str()));
         }
 
-        ft.fieldtype = StorageType{.storagetype = std::move(t.value())};
+        ft.fieldtype = StorageType(std::move(t.value()));
         break;
     }
     }

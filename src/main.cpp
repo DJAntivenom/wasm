@@ -28,57 +28,131 @@ static void printUsage(std::ostream &out, std::vector<std::string> const &argume
         << "    Print this help message and exit\n."
         << "  -v, --verbose\n"
         << "    Be more verbose.\n"
+        << "  --run-function <name> [n] [args...] \n"
+        << "    Run the function called <name>. If n is given the next n values are arguments.\n"
+        << "    Each one is of the form i32 v, i64 v, f32 v or f64 v, where v is the number.\n"
         << std::endl;
 }
 
-static void parseArguments(std::vector<std::string> &arguments)
+std::optional<wasm::options::FuncArg> parseFuncArg(const std::string &type_str, const std::string &val_str)
 {
-    auto has_help = [](const std::string &s)
+    try
     {
-        auto trimmed = trim(s);
-        return trimmed == "--help" || trimmed == "-h";
-    };
-
-    if (std::any_of(arguments.cbegin(), arguments.cend(), has_help))
-    {
-        printUsage(std::cout, arguments);
-        std::exit(0);
-    }
-
-    auto matches_verbose = [](const std::string &s)
-    {
-        auto trimmed = trim(s);
-        return trimmed == "--verbose" || trimmed == "-v";
-    };
-
-    auto new_end = std::remove_if(arguments.begin(), arguments.end(), matches_verbose);
-    if (new_end != arguments.end())
-    {
-        std::cout << "Output is verbose\n";
-        wasm::options::is_verbose = true;
-        arguments.erase(new_end, arguments.end());
-    }
-
-    if (arguments.size() > 2)
-    {
-        std::cerr << "Only one binary file allowed, got " << arguments.size() - 1 << "\n\t";
-        for (std::size_t i = 1; i < arguments.size(); ++i)
+        if (type_str == "i32")
         {
-            std::cerr << arguments[i];
-            if (i != arguments.size() - 1)
-                std::cerr << ", ";
+            return wasm::options::I32{static_cast<int32_t>(std::stoll(val_str))};
         }
-        std::cerr << "\n\n";
-        std::exit(1);
+        else if (type_str == "i64")
+        {
+            return wasm::options::I64{std::stoll(val_str)};
+        }
+        else if (type_str == "f32")
+        {
+            return wasm::options::F32{std::stof(val_str)};
+        }
+        else if (type_str == "f64")
+        {
+            return wasm::options::F64{std::stod(val_str)};
+        }
+    }
+    catch (...)
+    {
+        return std::nullopt;
+    }
+    return std::nullopt;
+}
+
+void parseArguments(std::vector<std::string> &arguments)
+{
+    for (auto iter = ++arguments.begin(); iter != arguments.end();)
+    {
+        const std::string &arg = *iter;
+
+        if (arg == "-h" || arg == "--help")
+        {
+            printUsage(std::cout, arguments);
+            std::exit(0);
+        }
+        else if (arg == "-v" || arg == "--verbose")
+        {
+            wasm::options::is_verbose = true;
+            ++iter;
+        }
+        else if (arg == "--run-function")
+        {
+            ++iter;
+            if (iter == arguments.end())
+            {
+                std::cerr << "Expected function name after --run-function";
+                printUsage(std::cerr, arguments);
+                std::exit(1);
+            }
+            wasm::options::RunFunction rf;
+            rf.name = *iter++;
+            // Check for optional n number of args
+            size_t nargs = 0;
+            if (iter != arguments.end())
+            {
+                std::istringstream iss(*iter);
+                if ((iss >> nargs) && iss.eof())
+                {
+                    ++iter; // consume n
+                }
+                else
+                {
+                    nargs = 0; // no count given
+                }
+            }
+            // Parse the args
+            for (size_t i = 0; i < nargs; ++i)
+            {
+                if (iter == arguments.end())
+                {
+                    std::cerr << "Not enough arguments for function " + rf.name + "\n";
+                    printUsage(std::cerr, arguments);
+                    std::exit(1);
+                }
+                std::string type, val;
+                std::istringstream extractor(*iter);
+                if (!(extractor >> type >> val))
+                {
+                    std::cerr << "Invalid argument format for function " + rf.name + "\n";
+                    printUsage(std::cerr, arguments);
+                    std::exit(1);
+                }
+                auto parsed_arg = parseFuncArg(type, val);
+                if (!parsed_arg)
+                {
+                    std::cerr << "Failed to parse function argument '" + *iter + "' for function " + rf.name + "\n";
+                    printUsage(std::cerr, arguments);
+                    std::exit(1);
+                }
+                rf.args.push_back(std::move(*parsed_arg));
+                ++iter;
+            }
+            wasm::options::functions_to_run.push_back(std::move(rf));
+        }
+        else
+        {
+            // Assume last positional argument is the file name
+            if (wasm::options::cli_filename != "")
+            {
+                std::cerr << "Multiple input files specified\n";
+                printUsage(std::cerr, arguments);
+                std::exit(1);
+            }
+            wasm::options::cli_filename = arg;
+            ++iter;
+        }
     }
 
-    if (arguments.size() < 2)
+    // Check file presence if no parse errors
+    if (wasm::options::cli_filename == "")
     {
-        std::cerr << "No file given\n\n";
+        std::cerr << "No input file specified\n";
         printUsage(std::cerr, arguments);
         std::exit(1);
     }
-    wasm::options::cli_filename = arguments[1];
 }
 
 int main(int argc, const char *argv[])
@@ -118,14 +192,49 @@ int main(int argc, const char *argv[])
     }
 
     if (options::is_verbose)
-        std::cout << "main: Decoded module, starting validation\n";
+        std::cout << "main: Decoded module, starting instantiation\n";
 
-    auto validation_success = module.validate();
-    if (!validation_success)
+    std::shared_ptr<execute::Store> store;
     {
-        std::cerr << "Validation of module failed\n"
-                  << "  Reason: " << validation_success.error();
-        return 1;
+        auto instantiation_success = module.instantiate();
+        if (!instantiation_success)
+        {
+            std::cerr << "Instantiation of module failed\n"
+                      << "  Reason: " << instantiation_success.error() << "\n";
+            return 1;
+        }
+        store = std::move(instantiation_success.value());
+    }
+
+    for (const auto &function : wasm::options::functions_to_run)
+    {
+        std::vector<wasm::execute::Value> args;
+        std::transform(function.args.begin(),
+                       function.args.end(),
+                       std::back_inserter(args),
+                       [](const auto &arg)
+                       {
+                           switch (arg.index())
+                           {
+                           case 0:
+                               return wasm::execute::Value(std::get<0>(arg).value);
+                           case 1:
+                               return wasm::execute::Value(std::get<1>(arg).value);
+                           case 2:
+                               return wasm::execute::Value(std::get<2>(arg).value);
+                           default:
+                               return wasm::execute::Value(std::get<3>(arg).value);
+                           }
+                       });
+        auto values = store->runFunction(std::u32string(function.name.begin(),
+                                                        function.name.end()),
+                                         args);
+        if (!values)
+        {
+            std::cerr << "Running function \"" << function.name << "\" failed\n"
+                      << "  Reason: " << values.error() << "\n";
+            continue;
+        }
     }
 
     return 0;

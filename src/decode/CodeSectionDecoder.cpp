@@ -788,7 +788,7 @@ static Error<std::unique_ptr<Instruction>> decodeInstruction(CodeSectionDecoder:
     }
 }
 
-static Error<Expression> decodeExpression(CodeSectionDecoder::InputStream &stream)
+Error<Expression> decodeExpression(SectionDecoder::InputStream &stream)
 {
     Expression expr;
 

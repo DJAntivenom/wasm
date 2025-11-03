@@ -1,5 +1,5 @@
 /**
- * \file GlobalVariable.hpp
+ * \file Global.hpp
  * \brief Declaration of the GlobalVariable class.
  */
 
@@ -15,8 +15,17 @@ WASM_NAMESPACE_BEGIN
  *
  * The spec can be found here: https://webassembly.github.io/spec/core/syntax/modules.html#globals
  */
-class GlobalVariable
+class Global
 {
+public:
+    Global(const GlobalType &gt, const Expression &expr) : gt(gt), expr(std::move(expr)) {};
+
+    const inline constexpr GlobalType &getGlobalType() const { return gt; };
+    const inline constexpr Expression &getExpr() const { return expr; };
+
+private:
+    GlobalType gt;
+    Expression expr;
 };
 
 WASM_NAMESPACE_END

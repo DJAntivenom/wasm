@@ -7,6 +7,7 @@
 #define __WASM_MODULE_HPP__
 
 #include <wasm/wasm.hpp>
+#include <wasm/execute/ModuleInstance.hpp>
 
 #include <vector>
 
@@ -28,9 +29,19 @@ class Module
 public:
     std::vector<RecType> types;
     std::vector<Function> functions;
-    std::vector<GlobalType> globals;
+    std::vector<Global> globals;
     std::vector<MemoryType> memory_types;
     std::vector<Export> exports;
+
+    /**
+     * \brief Instantiates this abstract representation of a module.
+     * 
+     * This includes validation, import, global evaluation, data initialization, etc.
+     * However, unfortunately most of it is unfinished because I don't have enought time
+     * because I blew it on trying to understand subtyping validation for 8 hours and
+     * decoding everything by hand instead of asking a LLM.
+     */
+    Error<std::shared_ptr<execute::Store>> instantiate();
 
     /**
      * \brief Validate this module according to the type semantics.

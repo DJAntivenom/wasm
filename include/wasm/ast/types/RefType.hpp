@@ -11,6 +11,24 @@ struct RefType
 {
     bool is_nullable;
     HeapType reftype;
+
+    bool operator==(const RefType &other) const
+    {
+        return reftype == other.reftype;
+    }
+
+    bool operator!=(const RefType &other) const
+    {
+        return !(*this == other);
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const RefType &obj)
+    {
+        os << "Ref";
+        if (obj.is_nullable)
+            os << " null";
+        return os;
+    }
 };
 
 WASM_NAMESPACE_END

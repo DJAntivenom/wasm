@@ -24,6 +24,9 @@ public:
 
     void addExpression(Expression &&e) { body.push_back(std::move(e)); };
 
+    inline constexpr TypeIndex getType() const { return type; };
+    inline constexpr const std::vector<Expression> &getCode() const { return body; };
+
 private:
     TypeIndex type;
 

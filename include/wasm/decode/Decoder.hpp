@@ -6,8 +6,6 @@
 #ifndef __WASM_DECODER_HPP__
 #define __WASM_DECODER_HPP__
 
-#include "decode.hpp"
-
 #include <functional>
 #include <iostream>
 #include <istream>
@@ -208,29 +206,29 @@ public:
             switch (leading_byte)
             {
             case 0x69:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Exn()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Exn}}}});
             case 0x6A:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Array()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Array}}}});
             case 0x6B:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Struct()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Struct}}}});
             case 0x6C:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::I31()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::I31}}}});
             case 0x6D:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Eq()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Eq}}}});
             case 0x6E:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Any()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Any}}}});
             case 0x6F:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Extern()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Extern}}}});
             case 0x70:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Func()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::Func}}}});
             case 0x71:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::None()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::None}}}});
             case 0x72:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::NoExtern()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::NoExtern}}}});
             case 0x73:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::NoFunc()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::NoFunc}}}});
             case 0x74:
-                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::NoExn()}}}});
+                return Error<HeapType>(HeapType{.heaptype{AbsHeapType{.absheaptype{AbsHeapType::NoExn}}}});
             default:
             {
                 stream.seekg(stream.tellg() - std::streampos(1));
@@ -280,27 +278,19 @@ public:
             });
         case 0x7C:
             return Error<ValType>(ValType{
-                .valtype{
-                    NumType{.numtype{NumType::F64()}},
-                },
+                .valtype{NumType::F64},
             });
         case 0x7D:
             return Error<ValType>(ValType{
-                .valtype{
-                    NumType{.numtype{NumType::F32()}},
-                },
+                .valtype{NumType::F32},
             });
         case 0x7E:
             return Error<ValType>(ValType{
-                .valtype{
-                    NumType{.numtype{NumType::I64()}},
-                },
+                .valtype{NumType::I64},
             });
         case 0x7F:
             return Error<ValType>(ValType{
-                .valtype{
-                    NumType{.numtype{NumType::I32()}},
-                },
+                .valtype{NumType::I32},
             });
 
         default:
@@ -323,7 +313,8 @@ public:
         }
     }
 
-    static Error<std::u32string> decodeName(InputStream &stream)
+    static Error<std::u32string>
+    decodeName(InputStream &stream)
     {
         std::uint32_t num_bytes = 0;
         {

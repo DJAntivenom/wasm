@@ -4,7 +4,9 @@
 
 WASM_DECODE_NAMESPACE_BEGIN
 
-static Error<GlobalType> decodeSingleGlobal(GlobalSectionDecoder::InputStream &stream)
+extern Error<Expression> decodeExpression(SectionDecoder::InputStream &stream);
+
+static Error<Global> decodeSingleGlobal(GlobalSectionDecoder::InputStream &stream)
 {
     if (options::is_verbose)
         std::cout << "GlobalSection: Decoding one global definition\n";
@@ -16,7 +18,7 @@ static Error<GlobalType> decodeSingleGlobal(GlobalSectionDecoder::InputStream &s
         std::stringstream msg;
         msg << "Can't decode value type\n"
             << "  Reason: " << t.error();
-        return Error<GlobalType>(std::unexpected(msg.str()));
+        return Error<Global>(std::unexpected(msg.str()));
     }
 
     Byte is_mutable;
@@ -27,15 +29,27 @@ static Error<GlobalType> decodeSingleGlobal(GlobalSectionDecoder::InputStream &s
             std::stringstream msg;
             msg << "Can't decode mutability byte\n"
                 << "  Reason: " << success.error();
-            return Error<GlobalType>(std::unexpected(msg.str()));
+            return Error<Global>(std::unexpected(msg.str()));
         }
         is_mutable = success.value();
     }
 
-    return Error<GlobalType>(GlobalType{
-        .is_mutable{is_mutable == 0x01},
-        .reftype{std::move(t.value())},
-    });
+    auto expr = decodeExpression(stream);
+    if (!expr)
+    {
+        std::stringstream msg;
+        msg << "decodeSingleGlobal(): Can't decode initialization expression\n"
+            << "  Reason: " << expr.error();
+        return Error<Global>(std::unexpected(msg.str()));
+    }
+
+    return Error<Global>(
+        Global(
+            GlobalType{
+                .is_mutable{is_mutable == 0x01},
+                .reftype{std::move(t.value())},
+            },
+            expr.value()));
 }
 
 Error<void> GlobalSectionDecoder::decode(Module &module) const
